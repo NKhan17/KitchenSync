@@ -47,16 +47,16 @@ def get_float(prompt, minimum=0, maximum=None):
         except ValueError:
             print("Please enter a valid number.")
             continue
-        # float() accepts "nan" and "inf", which would break the bill, so reject them
+
         if not math.isfinite(number):
             print("Please enter a valid number.")
             continue
-        # check the maximum on the ORIGINAL input, before rounding
+        
         if maximum is not None and number > maximum:
             print(f"Value must be at most {maximum}.")
             continue
-        number = round(number, 2)          # money has only 2 decimal places
-        # check the minimum after rounding, so values like 0.004 (which become 0.00) are refused
+        number = round(number, 2)         
+        
         if number <= minimum:
             print(f"Value must be greater than {minimum}.")
         else:
@@ -169,7 +169,7 @@ def view_queue():
     if len(order_items) == 0:
         print("No orders in the queue.")
         return
-    queue = sorted(order_items, key=lambda e: e["time"])   # oldest first
+    queue = sorted(order_items, key=lambda e: e["time"])   
     print(f"{'ID':<5}{'Time':<10}{'Table':<7}{'Item':<20}{'Qty':<5}{'Waiting':<10}{'Status':<11}")
     for e in queue:
         flag = "  !! DELAYED" if is_delayed(e) else ""
@@ -264,7 +264,7 @@ def generate_bill():
         subtotal += amount
         print(f"{name:<20}{line['qty']:>5}{line['price']:>10.2f}{amount:>12.2f}")
     subtotal = round(subtotal, 2)
-    tax = round(subtotal * TAX_RATE, 2)      # round so printed lines add up exactly
+    tax = round(subtotal * TAX_RATE, 2)      
     total = round(subtotal + tax, 2)
     print("-" * 47)
     print(f"{'Subtotal':<35}{subtotal:>12.2f}")
@@ -274,10 +274,9 @@ def generate_bill():
     people = get_int(f"\nSplit bill between how many people? (1-{MAX_PEOPLE}, 1 for no split): ",
                      minimum=1, maximum=MAX_PEOPLE)
     if people > 1:
-        # work in paise (whole numbers) so no cent is lost or invented
         total_paise = round(total * 100)
-        base = total_paise // people          # what everyone pays at minimum
-        extra = total_paise % people          # leftover paise, 1 each to the first few people
+        base = total_paise // people         
+        extra = total_paise % people          
         if extra == 0:
             print(f"Each person pays: Rs. {base / 100:.2f}")
         else:
@@ -285,7 +284,7 @@ def generate_bill():
             print(f"{people - extra} person(s) pay: Rs. {base / 100:.2f}")
         print(f"(Shares add up to the exact total of Rs. {total:.2f})")
 
-    # table is settled: remove its items from the active queue
+    
     order_items[:] = [e for e in order_items if e["table"] != table]
     print(f"\nTable {table} is now cleared. Thank you!")
 
