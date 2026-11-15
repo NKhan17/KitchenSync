@@ -1,7 +1,17 @@
+import math
 from datetime import datetime
 
+# ---------------- SETTINGS ----------------
 TAX_RATE = 0.05          # 5% GST
 DELAY_BUFFER = 10        # minutes added to prep time before an order is flagged (stretch)
+
+# ---------------- VALIDATION LIMITS ----------------
+MAX_NAME_LEN = 20        # keeps console tables aligned
+MAX_PRICE = 10000        # Rs. per item
+MAX_PREP_TIME = 180      # minutes
+MAX_QTY = 50             # per order line
+MAX_TABLE = 100          # table numbers 1 to 100
+MAX_PEOPLE = 20          # bill split
 
 # ---------------- DATA ----------------
 menu = []                # {"name", "price", "prep_time"}
@@ -31,7 +41,7 @@ def get_int(prompt, minimum=None, maximum=None):
             return number
 
 
-def get_float(prompt, minimum=0):
+def get_float(prompt, minimum=0, maximum=None):
     while True:
         value = input(prompt).strip()
         try:
@@ -39,6 +49,16 @@ def get_float(prompt, minimum=0):
         except ValueError:
             print("Please enter a valid number.")
             continue
+        # float() accepts "nan" and "inf", which would break the bill, so reject them
+        if not math.isfinite(number):
+            print("Please enter a valid number.")
+            continue
+        # check the maximum on the ORIGINAL input, before rounding
+        if maximum is not None and number > maximum:
+            print(f"Value must be at most {maximum}.")
+            continue
+        number = round(number, 2)          # money has only 2 decimal places
+        # check the minimum after rounding, so values like 0.004 (which become 0.00) are refused
         if number <= minimum:
             print(f"Value must be greater than {minimum}.")
         else:
@@ -80,11 +100,14 @@ def manage_menu():
             name = get_text("\nEnter food name: ")
             if name == "":
                 print("\nFood name cannot be empty!")
+            elif len(name) > MAX_NAME_LEN:
+                print(f"\nFood name is too long! Maximum {MAX_NAME_LEN} characters.")
             elif find_menu_item(name):
                 print("\nThat item is already on the menu!")
             else:
-                price = get_float("Enter price: ")
-                prep_time = get_int("Enter preparation time (minutes): ", minimum=1)
+                price = get_float("Enter price: ", maximum=MAX_PRICE)
+                prep_time = get_int("Enter preparation time (minutes): ",
+                                    minimum=1, maximum=MAX_PREP_TIME)
                 menu.append({"name": name, "price": price, "prep_time": prep_time})
                 print("\nFood item added successfully!")
 
@@ -106,7 +129,7 @@ def take_order():
         print("Menu is empty. Add food items first.")
         return
 
-    table = get_int("Enter table number: ", minimum=1)
+    table = get_int(f"Enter table number (1-{MAX_TABLE}): ", minimum=1, maximum=MAX_TABLE)
     added = 0
 
     while True:
@@ -115,7 +138,7 @@ def take_order():
         if number == 0:
             break
         item = menu[number - 1]
-        qty = get_int(f"Quantity of {item['name']}: ", minimum=1)
+        qty = get_int(f"Quantity of {item['name']} (1-{MAX_QTY}): ", minimum=1, maximum=MAX_QTY)
 
         order_items.append({
             "id": next_order_id,
@@ -216,7 +239,7 @@ def generate_bill():
     if len(order_items) == 0:
         print("No active orders.")
         return
-    table = get_int("Enter table number: ", minimum=1)
+    table = get_int(f"Enter table number (1-{MAX_TABLE}): ", minimum=1, maximum=MAX_TABLE)
     items = [e for e in order_items if e["table"] == table]
     if not items:
         print(f"\nNo orders found for Table {table}.")
@@ -242,16 +265,27 @@ def generate_bill():
         amount = line["qty"] * line["price"]
         subtotal += amount
         print(f"{name:<20}{line['qty']:>5}{line['price']:>10.2f}{amount:>12.2f}")
-    tax = subtotal * TAX_RATE
-    total = subtotal + tax
+    subtotal = round(subtotal, 2)
+    tax = round(subtotal * TAX_RATE, 2)      # round so printed lines add up exactly
+    total = round(subtotal + tax, 2)
     print("-" * 47)
     print(f"{'Subtotal':<35}{subtotal:>12.2f}")
     print(f"{'Tax (' + str(int(TAX_RATE * 100)) + '%)':<35}{tax:>12.2f}")
     print(f"{'TOTAL':<35}{total:>12.2f}")
 
-    people = get_int("\nSplit bill between how many people? (1 for no split): ", minimum=1)
+    people = get_int(f"\nSplit bill between how many people? (1-{MAX_PEOPLE}, 1 for no split): ",
+                     minimum=1, maximum=MAX_PEOPLE)
     if people > 1:
-        print(f"Each person pays: Rs. {total / people:.2f}  (total split into {people} equal parts)")
+        # work in paise (whole numbers) so no cent is lost or invented
+        total_paise = round(total * 100)
+        base = total_paise // people          # what everyone pays at minimum
+        extra = total_paise % people          # leftover paise, 1 each to the first few people
+        if extra == 0:
+            print(f"Each person pays: Rs. {base / 100:.2f}")
+        else:
+            print(f"{extra} person(s) pay: Rs. {(base + 1) / 100:.2f}")
+            print(f"{people - extra} person(s) pay: Rs. {base / 100:.2f}")
+        print(f"(Shares add up to the exact total of Rs. {total:.2f})")
 
     # table is settled: remove its items from the active queue
     order_items[:] = [e for e in order_items if e["table"] != table]
