@@ -1,26 +1,24 @@
 import math
 from datetime import datetime
 
-# ---------------- SETTINGS ----------------
-TAX_RATE = 0.05          # 5% GST
-DELAY_BUFFER = 10        # minutes added to prep time before an order is flagged (stretch)
+TAX_RATE = 0.05          
+DELAY_BUFFER = 10       
 
-# ---------------- VALIDATION LIMITS ----------------
-MAX_NAME_LEN = 20        # keeps console tables aligned
-MAX_PRICE = 10000        # Rs. per item
-MAX_PREP_TIME = 180      # minutes
-MAX_QTY = 50             # per order line
-MAX_TABLE = 100          # table numbers 1 to 100
+
+MAX_NAME_LEN = 20       
+MAX_PRICE = 10000       
+MAX_PREP_TIME = 180     
+MAX_QTY = 10            
+MAX_TABLE = 50       
 MAX_PEOPLE = 20          # bill split
 
-# ---------------- DATA ----------------
+
 menu = []                # {"name", "price", "prep_time"}
-order_items = []         # one entry per ordered line, see take_order()
-sales = {}               # item name -> total quantity sold today (stretch)
+order_items = []         
+sales = {}               # item name -> total quantity sold today 
 next_order_id = 1
 
 
-# ---------------- INPUT HELPERS (handle wrong input) ----------------
 def get_text(prompt):
     return input(prompt).strip()
 
@@ -76,7 +74,7 @@ def find_menu_item(name):
     return None
 
 
-# ---------------- FEATURE 1: MENU ----------------
+#1: MENU 
 def show_menu():
     print("\n========== FOOD MENU ==========")
     if len(menu) == 0:
@@ -121,7 +119,7 @@ def manage_menu():
             print("\nInvalid choice!")
 
 
-# ---------------- FEATURE 2: TAKE ORDER ----------------
+# 2: TAKE ORDER
 def take_order():
     global next_order_id
     print("\n========== TAKE NEW ORDER ==========")
@@ -161,7 +159,7 @@ def take_order():
         print(f"\nOrder for Table {table} sent to the kitchen!")
 
 
-# ---------------- FEATURE 3: KITCHEN QUEUE ----------------
+# 3: KITCHEN QUEUE 
 def is_delayed(entry):
     return entry["status"] != "Ready" and minutes_since(entry["time"]) > entry["prep_time"] + DELAY_BUFFER
 
@@ -180,7 +178,7 @@ def view_queue():
               f"{e['status']:<11}{flag}")
 
 
-# ---------------- FEATURE 4: STATUS + WAITING TABLES ----------------
+#  4: STATUS + WAITING TABLES 
 def show_waiting_tables():
     print("\n========== WAITING TABLES ==========")
     waiting = {}
@@ -233,7 +231,7 @@ def status_menu():
             print("\nInvalid choice!")
 
 
-# ---------------- FEATURE 5: BILLING ----------------
+#  5: BILLING
 def generate_bill():
     print("\n========== GENERATE TABLE BILL ==========")
     if len(order_items) == 0:
@@ -292,7 +290,7 @@ def generate_bill():
     print(f"\nTable {table} is now cleared. Thank you!")
 
 
-# ---------------- STRETCH: BEST SELLERS ----------------
+# BEST SELLERS 
 def best_sellers():
     print("\n========== TODAY'S BEST-SELLING ITEMS ==========")
     if not sales:
@@ -303,7 +301,7 @@ def best_sellers():
         print(f"{rank}. {name} - {qty} sold")
 
 
-# ---------------- MAIN ----------------
+# MAIN 
 print("======================================")
 print("              KITCHENSYNC")
 print("     Restaurant Order Management")
