@@ -49,36 +49,44 @@ All input is checked, and the program asks again instead of crashing.
 | Split | Whole number, 1 to 20 people |
 | Menu choices | Anything outside the listed options shows "Invalid choice" |
 
-The limits are constants at the top of `kitchensync.py` and can be changed in one place.
+The limits are constants in `config.py` and can be changed in one place.
 
 ## How it works
 
-- **Data storage:** everything is kept in memory using Python lists and dicts. Data is lost when the program closes (no database, as per the brief).
+- **Data storage:** everything is kept in memory using Python lists and dicts inside `data.py`. Data is lost when the program closes (no database, as per the brief).
   - `menu`: list of dicts (`name`, `price`, `prep_time`)
   - `order_items`: list of dicts, one per ordered line. This is the kitchen queue.
   - `sales`: dict of item name to total quantity sold
 - **Order queue:** each ordered line is stamped with `datetime.now()` and the queue is displayed sorted by that time (oldest first).
 - **Status tracking:** each item has a `status` field that moves Pending, then Preparing, then Ready.
-- **Delay check:** an item is delayed if it isn't Ready and `minutes waited > prep time + 10`.
+- **Delay check:** an item is delayed if it isn't Ready and `minutes waited > prep time + DELAY_BUFFER`.
 - **Billing:** identical items are merged into one line. Tax and total are rounded to 2 decimals so the printed lines add up exactly.
 - **Equal split:** the total is converted to paise (whole numbers) and divided, with leftover paise given one each to the first few people. The shares always add up to the exact bill total (e.g. Rs. 350.00 between 3 people is 116.67 + 116.67 + 116.66).
 
 ## Settings
 
-Edit these constants at the top of `kitchensync.py`:
+Edit these constants in `config.py`:
 
 ```python
 TAX_RATE = 0.05        # 5% GST
-DELAY_BUFFER = 10      # extra minutes before an item is flagged as delayed
+DELAY_BUFFER = 1       # extra minutes before an item is flagged as delayed
 ```
 
-**Tip for testing the delay flag:** set `DELAY_BUFFER = -1`, place an order, wait about a minute, and view the queue. Remember to set it back to `10`.
+**Tip for testing the delay flag:** set `DELAY_BUFFER = -1`, place an order, wait about a minute, and view the queue. Remember to set it back to your desired value.
 
 ## Project structure
 
 ```
-kitchensync.py   # the entire application
-README.md        # this file
+kitchensync.py    # main application entry point and interactive menu loop
+config.py         # configuration constants, tax rate, and validation limits
+data.py           # in-memory shared state (menu, order items, sales, order ID)
+utils.py          # input validation and helper utility functions
+menu_manager.py   # menu display and food item management
+order_manager.py  # order placement and intake workflow
+kitchen_queue.py  # kitchen queue display and status tracking
+billing.py        # table bill generation, tax calculation, and bill splitting
+analytics.py      # best-selling items analysis and reporting
+README.md         # project documentation
 ```
 
 ## Team
