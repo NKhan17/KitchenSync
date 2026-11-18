@@ -14,7 +14,7 @@ A menu-driven **console application in Python** that helps a restaurant send ord
 5. **Table bill** with 5% tax and an equal split between people
 
 ### Stretch features
-- **Delay flag:** items waiting longer than their preparation time + 10 minutes are marked `!! DELAYED`
+- **Delay flag:** items waiting longer than their preparation time + buffer time are marked `!! DELAYED`
 - **Best sellers:** shows the day's top-selling items
 
 ## How to run
